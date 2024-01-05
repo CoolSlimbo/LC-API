@@ -23,6 +23,30 @@ namespace LC_API.ClientAPI
         internal static Dictionary<string, List<string>> CommandAliases = new Dictionary<string, List<string>>();
 
         /// <summary>
+        /// Registers all the commands specified using the `RegisterCommand` attribute.
+        /// </summary>
+        /// <param name="class">The class to register commands for.</param>
+        public static void RegisterCommands(Type classTypes) {
+            foreach (MethodInfo method in classTypes.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.Instance)) {
+                var attribute = method.GetCustomAttribute<RegisterCommandAttribute>();
+                if (attribute != null) {
+                    // Throw an error if it doesn't take an argument of string[]
+                    if (method.GetParameters().Length != 1 || method.GetParameters()[0].ParameterType != typeof(string[])) {
+                        Plugin.Log.LogError($"Command handler {method.Name} does not take a string[] as an argument!");
+                        continue;
+                    }
+                    
+                    // Register the command
+                    if (attribute.aliases.Length > 0) {
+                        RegisterCommand(attribute.command, attribute.aliases.ToList(), (Action<string[]>) Delegate.CreateDelegate(typeof(Action<string[]>), method));
+                    } else {
+                        RegisterCommand(attribute.command, (Action<string[]>) Delegate.CreateDelegate(typeof(Action<string[]>), method));
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Registers a command with no aliases.
         /// </summary>
         /// <param name="command">The command string. No spaces.</param>
@@ -149,6 +173,26 @@ namespace LC_API.ClientAPI
 
                 for (int z = 0; z < newInstructions.Count; z++) yield return newInstructions[z];
             }
+        }
+    }
+
+    /// <summary>
+    /// Registers a command, using the `CommandHandler.RegisterCommand` in the backend.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method, Inherited = true, AllowMultiple = true)]
+    class RegisterCommandAttribute : Attribute {
+        // Name of the command
+        public string command;
+        // Aliases of the command
+        public string[] aliases;
+        public RegisterCommandAttribute(string command) {
+            this.command = command;
+            this.aliases = new string[0];
+        }
+        
+        public RegisterCommandAttribute(string command, params string[] aliases) {
+            this.command = command;
+            this.aliases = aliases;
         }
     }
 }
