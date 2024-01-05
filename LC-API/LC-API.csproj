@@ -24,6 +24,10 @@
     <Company>2018</Company>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
+  
+  <PropertyGroup>
+    <LETHAL_COMPANY_DIR>E:\SteamLibrary\steamapps\common\Lethal Company</LETHAL_COMPANY_DIR>
+  </PropertyGroup>
 
   <ItemGroup>
     <None Include="../README.md" Pack="true" PackagePath="/" />
